@@ -756,10 +756,17 @@ function renderMiniGame(config) {
     item.style.left = `${8 + Math.random() * 78}%`;
     item.style.top = `${8 + Math.random() * 74}%`;
   };
+  const createPlayfield = () => {
+    const playfield = document.createElement('div');
+    playfield.className = 'game-board__playfield';
+    board.appendChild(playfield);
+    return playfield;
+  };
 
   if (config.type === 'cosmos') {
     board.classList.add('game-board--constellation');
     board.setAttribute('aria-label', 'Созвездие для соединения');
+    const playfield = createPlayfield();
     const starPositions = [
       { x: 12, y: 30 },
       { x: 27, y: 66 },
@@ -774,7 +781,7 @@ function renderMiniGame(config) {
     lines.setAttribute('viewBox', '0 0 100 100');
     lines.setAttribute('preserveAspectRatio', 'none');
     lines.setAttribute('aria-hidden', 'true');
-    board.appendChild(lines);
+    playfield.appendChild(lines);
     let nextStar = 0;
     const starButtons = starPositions.map((position, index) => {
       const star = button('✦', () => {
@@ -807,7 +814,7 @@ function renderMiniGame(config) {
       star.setAttribute('aria-pressed', 'false');
       star.style.left = `${position.x}%`;
       star.style.top = `${position.y}%`;
-      board.appendChild(star);
+      playfield.appendChild(star);
       return star;
     });
     const restart = button('Начать заново', () => {
@@ -1103,6 +1110,7 @@ function renderMiniGame(config) {
   } else if (config.type === 'mysterious') {
     board.classList.add('game-board--secret-room');
     board.setAttribute('aria-label', 'Тайная комната со скрытыми звёздами');
+    const playfield = createPlayfield();
     const clues = [
       { x: 14, y: 23 },
       { x: 78, y: 22 },
@@ -1136,11 +1144,13 @@ function renderMiniGame(config) {
     restartButton.hidden = true;
     const revealNearby = (event) => {
       if (!active) return;
-      const bounds = board.getBoundingClientRect();
+      const bounds = playfield.getBoundingClientRect();
       const x = event.clientX - bounds.left;
       const y = event.clientY - bounds.top;
-      board.style.setProperty('--light-x', `${(x / bounds.width) * 100}%`);
-      board.style.setProperty('--light-y', `${(y / bounds.height) * 100}%`);
+      const normalizedX = Math.max(0, Math.min(100, (x / bounds.width) * 100));
+      const normalizedY = Math.max(0, Math.min(100, (y / bounds.height) * 100));
+      board.style.setProperty('--light-x', `${normalizedX}%`);
+      board.style.setProperty('--light-y', `${normalizedY}%`);
       clues.forEach((clue, index) => {
         if (found.has(index)) return;
         const clueX = bounds.width * (clue.x / 100);
@@ -1176,7 +1186,7 @@ function renderMiniGame(config) {
       star.style.left = `${clue.x}%`;
       star.style.top = `${clue.y}%`;
       star.hidden = true;
-      board.appendChild(star);
+      playfield.appendChild(star);
       return star;
     });
     controls.append(startButton, restartButton);

@@ -769,6 +769,11 @@ body.theme-forest .return-btn {
   background: var(--panel-strong);
 }
 
+.game-board__playfield {
+  position: absolute;
+  inset: 0;
+}
+
 .game-tools,
 .game-controls {
   display: flex;
@@ -874,6 +879,7 @@ body.theme-forest .return-btn {
 }
 
 .constellation-star {
+  position: absolute;
   z-index: 2;
   transform: translate(-50%, -50%);
   font-size: 1.15rem;
@@ -951,6 +957,7 @@ body.theme-forest .return-btn {
 }
 
 .game-board--secret-room .secret-room-star {
+  position: absolute;
   z-index: 2;
   transform: translate(-50%, -50%);
   border-color: rgba(255, 237, 190, 0.82);
