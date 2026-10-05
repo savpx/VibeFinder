@@ -117,6 +117,102 @@ input {
   isolation: isolate;
 }
 
+.language-switcher {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top));
+  left: max(20px, env(safe-area-inset-left));
+  z-index: 22;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  direction: ltr;
+}
+
+.language-toggle,
+.language-options button {
+  min-width: 42px;
+  min-height: 38px;
+  border: 1px solid rgba(220, 220, 220, 0.28);
+  border-radius: 999px;
+  color: #f4f4f4;
+  background: rgba(18, 18, 18, 0.88);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+.language-toggle:hover,
+.language-options button:hover,
+.language-toggle:focus-visible,
+.language-options button:focus-visible {
+  border-color: rgba(245, 245, 245, 0.62);
+  background: rgba(40, 40, 40, 0.96);
+}
+
+.language-options {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border: 1px solid rgba(220, 220, 220, 0.14);
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.92);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+}
+
+.language-options[hidden] {
+  display: none;
+}
+
+.language-options button {
+  min-width: 38px;
+  min-height: 34px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.language-options button[aria-pressed="true"] {
+  border-color: rgba(245, 245, 245, 0.42);
+  background: rgba(220, 220, 220, 0.12);
+}
+
+.support-link {
+  position: fixed;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  z-index: 20;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(220, 220, 220, 0.28);
+  border-radius: 50%;
+  color: #f4f4f4;
+  background: rgba(18, 18, 18, 0.88);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.support-link svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+}
+
+.support-link:hover,
+.support-link:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(245, 245, 245, 0.58);
+  background: rgba(34, 34, 34, 0.96);
+}
+
+.support-link[hidden] {
+  display: none;
+}
+
 .screen {
   position: absolute;
   inset: 0;
@@ -493,6 +589,13 @@ input {
   box-shadow: 0 0 0 1px rgba(235, 235, 235, 0.18);
 }
 
+[dir="rtl"] #survey-screen .option-btn,
+[dir="rtl"] .game-status,
+[dir="rtl"] .vibe-description-wrap,
+[dir="rtl"] .quote-card {
+  text-align: right;
+}
+
 #home-screen .primary-btn,
 #survey-screen .option-btn {
   border-color: rgba(220, 220, 220, 0.25);
@@ -743,6 +846,131 @@ body.theme-forest .return-btn {
   box-shadow: 0 0 22px color-mix(in srgb, var(--primary) 45%, transparent);
   cursor: pointer;
   animation: target-appear 0.28s ease-out both;
+}
+
+.game-board--constellation {
+  min-height: 320px;
+  background:
+    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--vibe-accent) 12%, transparent), transparent 68%),
+    var(--panel-strong);
+}
+
+.constellation-lines {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.constellation-lines line {
+  stroke: var(--vibe-accent);
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 1.4px var(--vibe-accent));
+  animation: constellation-link 0.45s ease-out both;
+}
+
+.constellation-star {
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  font-size: 1.15rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.constellation-star:hover:not(:disabled),
+.constellation-star:focus-visible {
+  transform: translate(-50%, -50%) scale(1.14);
+}
+
+.constellation-star:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.constellation-star::after {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.2rem;
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--panel-strong);
+  content: attr(data-sequence);
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.game-board--secret-room {
+  min-height: 330px;
+  overflow: hidden;
+  touch-action: none;
+  background:
+    radial-gradient(circle 88px at var(--light-x, 50%) var(--light-y, 50%), rgba(255, 238, 190, 0.3), transparent 78%),
+    radial-gradient(circle at 25% 20%, rgba(137, 119, 173, 0.14), transparent 35%),
+    linear-gradient(145deg, #11121a, #191725 54%, #10131a);
+  transition: background 0.2s ease;
+}
+
+.game-board--secret-room.is-searching {
+  background:
+    radial-gradient(circle 98px at var(--light-x, 50%) var(--light-y, 50%), rgba(255, 238, 190, 0.38), transparent 82%),
+    radial-gradient(circle at 25% 20%, rgba(137, 119, 173, 0.18), transparent 35%),
+    linear-gradient(145deg, #11121a, #191725 54%, #10131a);
+}
+
+.game-board--secret-room::before,
+.game-board--secret-room::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+  border: 1px solid rgba(210, 205, 229, 0.12);
+  border-radius: 50%;
+}
+
+.game-board--secret-room::before {
+  width: 36%;
+  aspect-ratio: 1;
+  top: 12%;
+  left: 32%;
+  box-shadow: 0 0 44px rgba(183, 167, 225, 0.08), inset 0 0 34px rgba(183, 167, 225, 0.04);
+}
+
+.game-board--secret-room::after {
+  width: 22%;
+  aspect-ratio: 1;
+  right: 9%;
+  bottom: -13%;
+  box-shadow: 0 0 34px rgba(183, 167, 225, 0.08);
+}
+
+.game-board--secret-room .secret-room-star {
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  border-color: rgba(255, 237, 190, 0.82);
+  color: #fff1c8;
+  background: rgba(255, 231, 174, 0.16);
+  box-shadow: 0 0 28px rgba(255, 231, 174, 0.42);
+}
+
+.game-board--secret-room .secret-room-star[hidden] {
+  display: none;
+}
+
+.game-board--secret-room .secret-room-star.is-found {
+  color: white;
+  background: rgba(255, 239, 197, 0.34);
+}
+
+@keyframes constellation-link {
+  from { stroke-dasharray: 0 100; opacity: 0.25; }
+  to { stroke-dasharray: 100 0; opacity: 1; }
 }
 
 .game-board--night-walk {
@@ -1287,6 +1515,16 @@ body.theme-forest .return-btn {
 }
 
 @media (max-width: 760px) {
+  .language-switcher {
+    top: max(14px, env(safe-area-inset-top));
+    left: max(14px, env(safe-area-inset-left));
+  }
+
+  .support-link {
+    right: max(15px, env(safe-area-inset-right));
+    bottom: max(15px, env(safe-area-inset-bottom));
+  }
+
   .answers {
     grid-template-columns: 1fr;
   }
@@ -1340,6 +1578,11 @@ body.theme-forest .return-btn {
 
   .game-board--cozy-room {
     min-height: 320px;
+  }
+
+  .game-board--constellation,
+  .game-board--secret-room {
+    min-height: 280px;
   }
 
   .clue-card--right {

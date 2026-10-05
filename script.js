@@ -6,6 +6,7 @@ const screens = {
   creation: document.getElementById('creation-screen'),
   vibe: document.getElementById('vibe-screen'),
 };
+const supportLink = document.getElementById('support-link');
 
 const startButton = document.getElementById('start-btn');
 const returnButton = document.getElementById('return-btn');
@@ -212,7 +213,7 @@ const vibeThemes = {
     quotes: ['Подсказка часто прячется на виду.', 'Любопытство — хороший ключ.', 'Не всё тайное должно оставаться тёмным.'],
     palette: 'theme-mysterious',
     signature: [0, 2, 0, 3, 0, 0, 1, 0, 0, 0],
-    game: { type: 'mysterious', title: 'Найди код' },
+    game: { type: 'mysterious', title: 'Тихий поиск' },
   },
   creative: {
     title: 'Свободное ателье',
@@ -263,9 +264,9 @@ let answerPending = false;
 const gameStage = document.getElementById('game-stage');
 const asmrStage = document.getElementById('asmr-stage');
 const creationMessage = document.getElementById('creation-message');
-const BACKGROUND_MUSIC_VOLUME = 0.1;
+const BACKGROUND_MUSIC_VOLUME = 0.10;
 const UI_CLICK_VOLUME = 0.22;
-const TRANSITION_VOLUME = 0.2;
+const TRANSITION_VOLUME = 0.20;
 const audioVolumeFades = new WeakMap();
 const uiButtonAudio = new Audio('audio/ui/ui.mp3');
 const transitionAudio = new Audio('audio/ui/transition.mp3');
@@ -431,6 +432,7 @@ function showScreen(name) {
   Object.entries(screens).forEach(([key, screen]) => {
     screen.classList.toggle('active', key === name);
   });
+  supportLink.hidden = name === 'survey' || name === 'vibe';
 }
 
 function cancelVibeCreation() {
@@ -585,7 +587,7 @@ function renderVibe(vibeKey) {
   state.quoteIndex = 0;
   state.quoteTimer = window.setInterval(updateQuote, 4500);
 
-  renderMiniGame(config.game);
+  if (vibeKey !== 'cozy') renderMiniGame(config.game);
   if (vibeKey === 'cozy') renderAsmrGame();
   updateQuote();
 }
@@ -756,20 +758,71 @@ function renderMiniGame(config) {
   };
 
   if (config.type === 'cosmos') {
-    setStatus('Соединяй звёзды созвездия в любом порядке.');
-    const stars = ['✦', '✧', '✦', '✧', '✦', '✧'];
-    stars.forEach((star, index) => {
-      const node = button(star, () => {
-        if (node.dataset.connected === 'true') return;
-        node.dataset.connected = 'true';
-        node.classList.add('is-pressed');
+    board.classList.add('game-board--constellation');
+    board.setAttribute('aria-label', 'Созвездие для соединения');
+    const starPositions = [
+      { x: 12, y: 30 },
+      { x: 27, y: 66 },
+      { x: 42, y: 38 },
+      { x: 58, y: 70 },
+      { x: 73, y: 32 },
+      { x: 88, y: 60 },
+    ];
+    const svgNamespace = 'http://www.w3.org/2000/svg';
+    const lines = document.createElementNS(svgNamespace, 'svg');
+    lines.classList.add('constellation-lines');
+    lines.setAttribute('viewBox', '0 0 100 100');
+    lines.setAttribute('preserveAspectRatio', 'none');
+    lines.setAttribute('aria-hidden', 'true');
+    board.appendChild(lines);
+    let nextStar = 0;
+    const starButtons = starPositions.map((position, index) => {
+      const star = button('✦', () => {
+        if (index !== nextStar) {
+          setStatus(`Сейчас нужна звезда ${nextStar + 1}.`);
+          return;
+        }
+        if (index > 0) {
+          const previous = starPositions[index - 1];
+          const line = document.createElementNS(svgNamespace, 'line');
+          line.setAttribute('x1', String(previous.x));
+          line.setAttribute('y1', String(previous.y));
+          line.setAttribute('x2', String(position.x));
+          line.setAttribute('y2', String(position.y));
+          lines.appendChild(line);
+        }
+        nextStar += 1;
+        star.disabled = true;
+        star.setAttribute('aria-pressed', 'true');
         addPoint();
-      });
-      node.classList.add('game-target');
-      node.style.left = `${12 + index * 15}%`;
-      node.style.top = `${25 + (index % 2) * 35}%`;
-      board.appendChild(node);
+        if (nextStar === starPositions.length) {
+          game.classList.add('is-complete');
+          setStatus('Созвездие готово! Ты соединил(а) все звёзды.');
+        } else {
+          setStatus(`Соединено звёзд: ${nextStar}/${starPositions.length}.`);
+        }
+      }, 'constellation-star');
+      star.dataset.sequence = String(index + 1);
+      star.setAttribute('aria-label', `Звезда ${index + 1}`);
+      star.setAttribute('aria-pressed', 'false');
+      star.style.left = `${position.x}%`;
+      star.style.top = `${position.y}%`;
+      board.appendChild(star);
+      return star;
     });
+    const restart = button('Начать заново', () => {
+      nextStar = 0;
+      lines.replaceChildren();
+      starButtons.forEach((star) => {
+        star.disabled = false;
+        star.setAttribute('aria-pressed', 'false');
+      });
+      game.classList.remove('is-complete');
+      setScore(0);
+      setStatus('Соедини звёзды по порядку: от 1 до 6.');
+    });
+    controls.appendChild(restart);
+    setStatus('Соедини звёзды по порядку: от 1 до 6.');
   } else if (config.type === 'solar') {
     setStatus('Касайся появляющихся солнечных искр.');
     const spawn = () => {
@@ -1048,42 +1101,86 @@ function renderMiniGame(config) {
     spawnBalloon();
     gameInterval(spawnBalloon, 950);
   } else if (config.type === 'mysterious') {
-    setStatus('Найди три подсказки в комнате, затем введи код.');
+    board.classList.add('game-board--secret-room');
+    board.setAttribute('aria-label', 'Тайная комната со скрытыми звёздами');
     const clues = [
-      { label: 'Старая лампа', digit: '4', left: '10%', top: '18%' },
-      { label: 'Закрытая книга', digit: '2', left: '42%', top: '58%' },
-      { label: 'Остановленные часы', digit: '7', left: '72%', top: '23%', alignRight: true },
+      { x: 14, y: 23 },
+      { x: 78, y: 22 },
+      { x: 47, y: 49 },
+      { x: 25, y: 79 },
+      { x: 82, y: 76 },
     ];
     const found = new Set();
-    clues.forEach((clue, index) => {
-      const clueButton = button(clue.label, () => {
+    let active = false;
+    const startButton = button('Начать тихий поиск', () => {
+      active = true;
+      startButton.hidden = true;
+      board.classList.add('is-searching');
+      setStatus('Проведи светом по комнате и коснись найденных звёзд.');
+    });
+    const restartButton = button('Начать заново', () => {
+      active = true;
+      found.clear();
+      setScore(0);
+      game.classList.remove('is-complete');
+      board.classList.add('is-searching');
+      clues.forEach((_, index) => {
+        const star = starButtons[index];
+        star.hidden = true;
+        star.disabled = false;
+        star.classList.remove('is-found');
+      });
+      restartButton.hidden = true;
+      setStatus('Проведи светом по комнате и коснись найденных звёзд.');
+    });
+    restartButton.hidden = true;
+    const revealNearby = (event) => {
+      if (!active) return;
+      const bounds = board.getBoundingClientRect();
+      const x = event.clientX - bounds.left;
+      const y = event.clientY - bounds.top;
+      board.style.setProperty('--light-x', `${(x / bounds.width) * 100}%`);
+      board.style.setProperty('--light-y', `${(y / bounds.height) * 100}%`);
+      clues.forEach((clue, index) => {
         if (found.has(index)) return;
+        const clueX = bounds.width * (clue.x / 100);
+        const clueY = bounds.height * (clue.y / 100);
+        if (Math.hypot(x - clueX, y - clueY) <= 90) {
+          starButtons[index].hidden = false;
+        }
+      });
+    };
+    board.addEventListener('pointermove', revealNearby);
+    board.addEventListener('pointerdown', revealNearby);
+    registerGameCleanup(() => {
+      board.removeEventListener('pointermove', revealNearby);
+      board.removeEventListener('pointerdown', revealNearby);
+    });
+    const starButtons = clues.map((clue, index) => {
+      const star = button('✧', () => {
+        if (!active || found.has(index)) return;
         found.add(index);
-        clueButton.classList.add('found');
-        clueButton.textContent = `${clue.label}: ${clue.digit}`;
-        setStatus(`Подсказок найдено: ${found.size} из 3.`);
-      }, 'clue-card');
-      clueButton.style.left = clue.left;
-      clueButton.style.top = clue.top;
-      if (clue.alignRight) clueButton.classList.add('clue-card--right');
-      board.appendChild(clueButton);
+        star.disabled = true;
+        star.classList.add('is-found');
+        addPoint();
+        if (found.size === clues.length) {
+          active = false;
+          game.classList.add('is-complete');
+          restartButton.hidden = false;
+          setStatus('Комната наполнилась мягким светом. Ты нашёл(ла) все звёзды.');
+        } else {
+          setStatus(`Найдено звёзд: ${found.size}/5. В комнате становится светлее.`);
+        }
+      }, 'secret-room-star');
+      star.setAttribute('aria-label', `Скрытая звезда ${index + 1}`);
+      star.style.left = `${clue.x}%`;
+      star.style.top = `${clue.y}%`;
+      star.hidden = true;
+      board.appendChild(star);
+      return star;
     });
-    const code = document.createElement('input');
-    code.inputMode = 'numeric';
-    code.maxLength = 3;
-    code.placeholder = 'Код из 3 цифр';
-    code.setAttribute('aria-label', 'Введите трёхзначный код');
-    const checkCode = button('Проверить', () => {
-      if (found.size < clues.length) {
-        setStatus('Сначала найди все три подсказки.');
-      } else if (code.value === '427') {
-        setStatus('Замок открыт — тайна разгадана!');
-        addPoint(3);
-      } else {
-        setStatus('Код не подошёл. Подсказки: лампа — 4, книга — 2, часы — 7.');
-      }
-    });
-    controls.append(code, checkCode);
+    controls.append(startButton, restartButton);
+    setStatus('Начни поиск, когда будешь готов(а). Здесь нет таймера и неправильных ответов.');
   } else if (config.type === 'creative') {
     setStatus('Выбери номер цвета, затем закрась области с таким же номером.');
     board.classList.add('paint-by-numbers-board');
@@ -1213,23 +1310,53 @@ function renderMiniGame(config) {
   } else if (config.type === 'nature') {
     setStatus('Лови листья: ветер меняет направление их полёта.');
     const leaves = [];
+    const leafGoal = 5;
+    let windInterval = null;
+    const moveLeaves = () => {
+      leaves.forEach((leaf) => {
+        if (!leaf.isConnected || leaf.disabled) return;
+        leaf.style.left = `${4 + Math.random() * 88}%`;
+        leaf.style.top = `${4 + Math.random() * 78}%`;
+      });
+    };
+    const restartButton = button('Начать заново', () => {
+      setScore(0);
+      game.classList.remove('is-complete');
+      restartButton.hidden = true;
+      leaves.forEach((leaf) => {
+        leaf.disabled = false;
+        leaf.textContent = '❧';
+        leaf.classList.remove('is-collected');
+        moveTarget(leaf);
+      });
+      window.clearInterval(windInterval);
+      windInterval = window.setInterval(moveLeaves, 1800);
+      setStatus('Собирай мерцающие листья и наслаждайся тишиной.');
+    });
+    restartButton.hidden = true;
+    controls.appendChild(restartButton);
     const spawnLeaf = () => {
       const leaf = target('❧', (event) => {
-        event.currentTarget.remove();
+        event.currentTarget.disabled = true;
+        event.currentTarget.textContent = '✓';
+        event.currentTarget.classList.add('is-collected');
         addPoint();
+        if (points === leafGoal) {
+          window.clearInterval(windInterval);
+          game.classList.add('is-complete');
+          restartButton.hidden = false;
+          setStatus('Все листья собраны. Лес снова тих и спокоен.');
+        } else {
+          setStatus(`Собрано листьев: ${points}/${leafGoal}. Ветер меняет направление.`);
+        }
       }, 'leaf-target');
       leaves.push(leaf);
     };
     for (let index = 0; index < 5; index += 1) spawnLeaf();
-    gameInterval(() => {
-      leaves.forEach((leaf) => {
-        if (!leaf.isConnected) return;
-        leaf.style.left = `${4 + Math.random() * 88}%`;
-        leaf.style.top = `${4 + Math.random() * 78}%`;
-      });
-    }, 1800);
+    windInterval = window.setInterval(moveLeaves, 1800);
+    registerGameCleanup(() => window.clearInterval(windInterval));
   } else if (config.type === 'retro') {
-    setStatus('Двигайся стрелками или кнопками, собирай ★ и обходи ■.');
+    setStatus('Двигайся клавишами WASD или экранными кнопками, собирай ★ и обходи ■.');
     board.classList.add('retro-board');
     board.tabIndex = 0;
     const cells = [];
@@ -1262,10 +1389,12 @@ function renderMiniGame(config) {
     };
     const keyHandler = (event) => {
       if (!screens.vibe.classList.contains('active')) return;
-      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
-        event.preventDefault();
-        move(event.key);
-      }
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target.isContentEditable) return;
+      const directions = { a: 'ArrowLeft', d: 'ArrowRight', w: 'ArrowUp', s: 'ArrowDown' };
+      const direction = directions[event.key.toLowerCase()];
+      if (!direction) return;
+      event.preventDefault();
+      move(direction);
     };
     document.addEventListener('keydown', keyHandler);
     registerGameCleanup(() => document.removeEventListener('keydown', keyHandler));
