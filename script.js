@@ -264,6 +264,7 @@ let answerPending = false;
 const gameStage = document.getElementById('game-stage');
 const asmrStage = document.getElementById('asmr-stage');
 const creationMessage = document.getElementById('creation-message');
+const vibeTransition = document.getElementById('vibe-transition');
 const BACKGROUND_MUSIC_VOLUME = 0.10;
 const UI_CLICK_VOLUME = 0.22;
 const TRANSITION_VOLUME = 0.20;
@@ -272,6 +273,7 @@ const uiButtonAudio = new Audio('audio/ui/ui.mp3');
 const transitionAudio = new Audio('audio/ui/transition.mp3');
 let creationTimer = null;
 let creationMessageTimer = null;
+let vibeRevealTimer = null;
 let creationSequence = 0;
 
 function fadeAudioVolume(audio, targetVolume, duration) {
@@ -445,6 +447,11 @@ function cancelVibeCreation() {
     clearInterval(creationMessageTimer);
     creationMessageTimer = null;
   }
+  if (vibeRevealTimer !== null) {
+    clearTimeout(vibeRevealTimer);
+    vibeRevealTimer = null;
+  }
+  vibeTransition.classList.remove('is-visible');
 }
 
 function startVibeCreation(vibeKey) {
@@ -488,8 +495,28 @@ function startVibeCreation(vibeKey) {
     clearInterval(creationMessageTimer);
     creationMessageTimer = null;
     creationTimer = null;
-    renderVibe(vibeKey);
-    showScreen('vibe');
+    const revealVibe = () => {
+      if (sequence !== creationSequence) return;
+      renderVibe(vibeKey);
+      showScreen('vibe');
+      screens.vibe.classList.add('vibe-screen-reveal');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        vibeTransition.classList.remove('is-visible');
+        return;
+      }
+      vibeRevealTimer = window.setTimeout(() => {
+        if (sequence === creationSequence) {
+          vibeTransition.classList.remove('is-visible');
+        }
+        vibeRevealTimer = null;
+      }, 350);
+    };
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    vibeTransition.classList.add('is-visible');
+    vibeRevealTimer = window.setTimeout(() => {
+      vibeRevealTimer = null;
+      revealVibe();
+    }, reducedMotion ? 250 : 1350);
   }, 5000);
 }
 
@@ -572,6 +599,7 @@ function renderVibe(vibeKey) {
   const config = vibeThemes[vibeKey];
   if (!config) return;
 
+  screens.vibe.classList.remove('vibe-screen-reveal');
   clearGame();
   document.body.classList.remove(...Object.values(vibeThemes).map((vibe) => vibe.palette));
   document.body.classList.add(config.palette);

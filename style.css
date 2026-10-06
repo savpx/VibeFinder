@@ -233,6 +233,21 @@ input {
   transform: scale(1);
 }
 
+.vibe-transition {
+  position: fixed;
+  z-index: 2147483647;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1250ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.vibe-transition.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 #home-screen {
   background: rgba(4, 7, 17, 0.35);
 }
@@ -648,15 +663,19 @@ body.theme-forest #vibe-screen {
 
 .quote-card {
   width: min(430px, 100%);
+  height: 8rem;
   align-self: flex-end;
-  background: rgba(14, 18, 30, 0.62);
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(14, 18, 30, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 0.75rem 1rem;
   backdrop-filter: blur(12px);
   cursor: pointer;
   transition: transform 0.25s ease, border-color 0.25s ease;
-  box-shadow: 0 18px 35px rgba(0,0,0,0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 body.theme-cosmos .quote-card,
@@ -722,9 +741,83 @@ body.theme-forest .return-btn {
   line-height: 1.8;
 }
 
+.vibe-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.vibe-game-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
 .game-stage,
 .asmr-stage {
   width: min(920px, 100%);
+}
+
+#vibe-screen.active.vibe-screen-reveal .theme-tag,
+#vibe-screen.active.vibe-screen-reveal #theme-name,
+#vibe-screen.active.vibe-screen-reveal .vibe-description-wrap,
+#vibe-screen.active.vibe-screen-reveal .vibe-divider,
+#vibe-screen.active.vibe-screen-reveal .quote-card,
+#vibe-screen.active.vibe-screen-reveal .vibe-game-title,
+#vibe-screen.active.vibe-screen-reveal .game-stage,
+#vibe-screen.active.vibe-screen-reveal .asmr-stage,
+#vibe-screen.active.vibe-screen-reveal .vibe-navigation .return-btn {
+  animation-name: vibe-result-reveal;
+  animation-duration: 850ms;
+  animation-timing-function: cubic-bezier(0.2, 0.65, 0.25, 1);
+  animation-fill-mode: both;
+}
+
+#vibe-screen.active.vibe-screen-reveal .theme-tag {
+  animation-delay: 150ms;
+}
+
+#vibe-screen.active.vibe-screen-reveal #theme-name {
+  animation-duration: 1150ms;
+  animation-delay: 850ms;
+}
+
+#vibe-screen.active.vibe-screen-reveal .vibe-description-wrap {
+  animation-delay: 1700ms;
+}
+
+#vibe-screen.active.vibe-screen-reveal .vibe-divider {
+  animation-delay: 2400ms;
+}
+
+#vibe-screen.active.vibe-screen-reveal .quote-card {
+  animation-delay: 3550ms;
+}
+
+#vibe-screen.active.vibe-screen-reveal .vibe-game-title {
+  animation-delay: 4200ms;
+}
+
+#vibe-screen.active.vibe-screen-reveal .game-stage,
+#vibe-screen.active.vibe-screen-reveal .asmr-stage {
+  animation-delay: 4700ms;
+}
+
+#vibe-screen.active.vibe-screen-reveal .vibe-navigation .return-btn {
+  animation-delay: 5450ms;
+}
+
+@keyframes vibe-result-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .mini-game,
@@ -1454,6 +1547,12 @@ body.theme-forest .return-btn {
 #vibe-screen[data-vibe="retro"] .quote-card { border:2px solid #bdf35d; border-radius:4px; box-shadow:4px 4px 0 #663c93; }
 #vibe-screen[data-vibe="cozy"] { --vibe-accent:#f3bd7d; color:#fff2df; background:radial-gradient(ellipse at 50% 5%,#75523e,#382c2a 58%,#201d23); }
 
+#vibe-screen[data-vibe] .quote-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 18, 30, 0.38);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
 #vibe-screen[data-vibe="night"] .mini-game,
 #vibe-screen[data-vibe="night"] .asmr-game { border-radius: 16px; background: linear-gradient(145deg,rgba(17,33,55,.94),rgba(8,13,26,.94)); box-shadow: 0 0 34px rgba(73,202,255,.12); }
 #vibe-screen[data-vibe="melancholic"] .mini-game,
@@ -1539,6 +1638,7 @@ body.theme-forest .return-btn {
   .quote-card {
     align-self: stretch;
     width: 100%;
+    height: 11rem;
   }
 
   .vibe-header {
@@ -1610,6 +1710,28 @@ button:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  #vibe-screen {
+    transition-duration: 0.01ms;
+  }
+
+  .vibe-transition {
+    transition-duration: 0.01ms;
+  }
+
+  #vibe-screen.active.vibe-screen-reveal .theme-tag,
+  #vibe-screen.active.vibe-screen-reveal #theme-name,
+  #vibe-screen.active.vibe-screen-reveal .vibe-description-wrap,
+  #vibe-screen.active.vibe-screen-reveal .vibe-divider,
+  #vibe-screen.active.vibe-screen-reveal .quote-card,
+  #vibe-screen.active.vibe-screen-reveal .vibe-game-title,
+  #vibe-screen.active.vibe-screen-reveal .game-stage,
+  #vibe-screen.active.vibe-screen-reveal .asmr-stage,
+  #vibe-screen.active.vibe-screen-reveal .vibe-navigation .return-btn {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
   .creation-orbit-ring,
   .creation-core,
   .creation-message,
