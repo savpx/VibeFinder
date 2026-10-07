@@ -76,6 +76,24 @@ const translationCatalog = {
   'Ваш вайб почти готов': ['Your vibe is almost ready', '你的专属氛围即将呈现', 'أجواؤك أصبحت جاهزة تقريبًا'],
   'Вернуться в начало': ['Return to start', '返回首页', 'العودة إلى البداية'],
   '↩ Вернуться': ['↩ Back', '↩ 返回', '↩ رجوع'],
+  'Меню результата': ['Result menu', '结果菜单', 'قائمة النتيجة'],
+  'Открыть меню': ['Open menu', '打开菜单', 'فتح القائمة'],
+  'Вернуться': ['Return', '返回', 'رجوع'],
+  'Поделиться моим вайбом': ['Share my vibe', '分享我的氛围', 'شارك أجوائي'],
+  'МОЙ ВАЙБ СЕГОДНЯ': ['MY VIBE TODAY', '今日我的氛围', 'أجوائي اليوم'],
+  'Узнай, какой вайб у тебя сегодня!': [
+    'Discover your vibe today!',
+    '来发现你今天的专属氛围！',
+    'اكتشف أجواءك لهذا اليوم!',
+  ],
+  'Поделиться': ['Share', '分享', 'مشاركة'],
+  'Скопировано!': ['Copied!', '已复制！', 'تم النسخ!'],
+  'Не удалось поделиться. Попробуйте ещё раз.': [
+    'Unable to share right now. Please try again.',
+    '暂时无法分享，请重试。',
+    'تعذّرت المشاركة الآن. يُرجى المحاولة مرة أخرى.',
+  ],
+  'Неизвестный вайб': ['Unknown vibe', '未知氛围', 'أجواء غير معروفة'],
   'Показать следующую цитату': ['Show the next quote', '显示下一句', 'عرض الاقتباس التالي'],
   'Вайб-цитата': ['A thought for this vibe', '氛围寄语', 'اقتباس يناسب أجواءك'],
   'ТВОЙ ВАЙБ': ['YOUR VIBE', '此刻的氛围', 'أجواؤك الآن'],
@@ -549,6 +567,7 @@ function setLanguage(language) {
   });
   translateTree(document.body);
   document.title = translateText('Vibe Finder');
+  window.dispatchEvent(new CustomEvent('vibe-language-change', { detail: { language } }));
 }
 
 languageToggle.addEventListener('click', () => {

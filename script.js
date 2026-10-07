@@ -5,11 +5,19 @@ const screens = {
   survey: document.getElementById('survey-screen'),
   creation: document.getElementById('creation-screen'),
   vibe: document.getElementById('vibe-screen'),
+  share: document.getElementById('share-screen'),
 };
 const supportLink = document.getElementById('support-link');
 
 const startButton = document.getElementById('start-btn');
-const returnButton = document.getElementById('return-btn');
+const vibeMenuToggle = document.getElementById('vibe-menu-toggle');
+const vibeMenu = document.getElementById('vibe-menu');
+const vibeReturnAction = document.getElementById('vibe-return-action');
+const vibeShareAction = document.getElementById('vibe-share-action');
+const shareVibeName = document.getElementById('share-vibe-name');
+const shareInvitation = document.getElementById('share-invitation');
+const shareButton = document.getElementById('share-button');
+const shareFeedback = document.getElementById('share-feedback');
 const progressLabel = document.getElementById('progress-label');
 const progressFill = document.getElementById('progress-fill');
 const progressBar = document.querySelector('.progress-bar');
@@ -249,6 +257,26 @@ const vibeThemes = {
   },
 };
 
+const vibeShareSlugs = {
+  cosmos: 'quiet-cosmos',
+  solar: 'little-sunshine',
+  neon: 'neon-after-dark',
+  forest: 'forest-pause',
+  night: 'night-walk',
+  melancholic: 'rainy-reverie',
+  zen: 'still-water',
+  chaotic: 'bright-little-chaos',
+  happy: 'sunny-joy',
+  mysterious: 'secret-room',
+  creative: 'creative-studio',
+  nature: 'forest-wind',
+  retro: 'retro-arcade',
+  cozy: 'home-comfort',
+};
+const vibeKeysByShareSlug = Object.fromEntries(
+  Object.entries(vibeShareSlugs).map(([key, slug]) => [slug, key]),
+);
+
 const state = {
   currentQuestion: 0,
   scores: { cosmos: 0, solar: 0, neon: 0, forest: 0 },
@@ -256,6 +284,8 @@ const state = {
   activeVibe: null,
   quoteIndex: 0,
   quoteTimer: null,
+  shareFeedbackTimer: null,
+  shareVibeKey: null,
   gameCleanups: [],
   gameTimeouts: new Set(),
 };
@@ -265,7 +295,7 @@ const gameStage = document.getElementById('game-stage');
 const asmrStage = document.getElementById('asmr-stage');
 const creationMessage = document.getElementById('creation-message');
 const vibeTransition = document.getElementById('vibe-transition');
-const BACKGROUND_MUSIC_VOLUME = 0.10;
+const BACKGROUND_MUSIC_VOLUME = 0.05;
 const UI_CLICK_VOLUME = 0.22;
 const TRANSITION_VOLUME = 0.20;
 const audioVolumeFades = new WeakMap();
@@ -434,7 +464,133 @@ function showScreen(name) {
   Object.entries(screens).forEach(([key, screen]) => {
     screen.classList.toggle('active', key === name);
   });
-  supportLink.hidden = name === 'survey' || name === 'vibe';
+  document.querySelector('.page-shell').dataset.activeScreen = name;
+  supportLink.hidden = name === 'survey' || name === 'vibe' || name === 'share';
+  if (name !== 'vibe') screens.vibe.classList.remove('vibe-screen-reveal');
+  if (name !== 'vibe') closeVibeMenu();
+}
+
+function closeVibeMenu(returnFocus = false) {
+  vibeMenu.hidden = true;
+  vibeMenuToggle.setAttribute('aria-expanded', 'false');
+  if (returnFocus) vibeMenuToggle.focus();
+}
+
+function setShareFeedback(message) {
+  if (state.shareFeedbackTimer !== null) {
+    window.clearTimeout(state.shareFeedbackTimer);
+  }
+  shareFeedback.textContent = translateText(message);
+  state.shareFeedbackTimer = window.setTimeout(() => {
+    shareFeedback.textContent = '';
+    state.shareFeedbackTimer = null;
+  }, 2400);
+}
+
+function renderSharePage(vibeKey) {
+  const config = vibeThemes[vibeKey];
+  state.shareVibeKey = config ? vibeKey : null;
+  document.body.classList.remove(...Object.values(vibeThemes).map((vibe) => vibe.palette));
+  delete screens.share.dataset.vibe;
+  shareFeedback.textContent = '';
+  if (state.shareFeedbackTimer !== null) {
+    window.clearTimeout(state.shareFeedbackTimer);
+    state.shareFeedbackTimer = null;
+  }
+
+  if (config) {
+    document.body.classList.add(config.palette);
+    screens.share.dataset.vibe = vibeKey;
+    shareVibeName.textContent = translateText(config.title);
+    shareButton.hidden = false;
+  } else {
+    shareVibeName.textContent = translateText('Неизвестный вайб');
+    shareButton.hidden = true;
+  }
+
+  showScreen('share');
+}
+
+function handleHashRoute() {
+  const match = window.location.hash.match(/^#\/share\/([a-z0-9-]+)\/?$/i);
+  if (match) {
+    renderSharePage(vibeKeysByShareSlug[match[1].toLowerCase()]);
+    return;
+  }
+
+  if (window.location.hash === '#home') {
+    showScreen('home');
+    return;
+  }
+
+  if (!window.location.hash || window.location.hash === '#') {
+    showScreen(state.activeVibe ? 'vibe' : 'home');
+    return;
+  }
+
+  showScreen('home');
+}
+
+function sharePageUrl(vibeKey) {
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = `/share/${vibeShareSlugs[vibeKey]}`;
+  return url.href;
+}
+
+async function copyShareText(text) {
+  let clipboardError = null;
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch (error) {
+      clipboardError = error;
+    }
+  }
+
+  const temporaryInput = document.createElement('textarea');
+  temporaryInput.value = text;
+  temporaryInput.setAttribute('readonly', '');
+  temporaryInput.style.position = 'fixed';
+  temporaryInput.style.opacity = '0';
+  document.body.appendChild(temporaryInput);
+  temporaryInput.select();
+  try {
+    if (!document.execCommand('copy')) {
+      throw clipboardError || new Error('Clipboard copy command was rejected.');
+    }
+  } finally {
+    temporaryInput.remove();
+  }
+}
+
+async function shareCurrentVibe() {
+  const vibeKey = state.shareVibeKey;
+  if (!vibeKey) return;
+
+  const url = sharePageUrl(vibeKey);
+  const message = translateText('Узнай, какой вайб у тебя сегодня!');
+  shareButton.disabled = true;
+  try {
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: shareVibeName.textContent, text: message, url });
+        return;
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        console.error('Native vibe sharing failed.', error);
+      }
+    }
+
+    await copyShareText(`${message}\n${url}`);
+    setShareFeedback('Скопировано!');
+  } catch (error) {
+    console.error('Vibe share clipboard fallback failed.', error);
+    setShareFeedback('Не удалось поделиться. Попробуйте ещё раз.');
+  } finally {
+    shareButton.disabled = false;
+  }
 }
 
 function cancelVibeCreation() {
@@ -498,8 +654,8 @@ function startVibeCreation(vibeKey) {
     const revealVibe = () => {
       if (sequence !== creationSequence) return;
       renderVibe(vibeKey);
-      showScreen('vibe');
       screens.vibe.classList.add('vibe-screen-reveal');
+      showScreen('vibe');
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         vibeTransition.classList.remove('is-visible');
         return;
@@ -650,7 +806,8 @@ startButton.addEventListener('click', () => {
   resetSurvey();
 });
 
-returnButton.addEventListener('click', () => {
+function performReturn() {
+  closeVibeMenu();
   cancelVibeCreation();
   clearGame();
   if (state.quoteTimer) {
@@ -661,9 +818,49 @@ returnButton.addEventListener('click', () => {
   state.scores = { cosmos: 0, solar: 0, neon: 0, forest: 0 };
   state.answers = [];
   state.activeVibe = null;
+  state.shareVibeKey = null;
   document.body.classList.remove(...Object.values(vibeThemes).map((vibe) => vibe.palette));
   delete screens.vibe.dataset.vibe;
+  delete screens.share.dataset.vibe;
+  if (window.location.hash) {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  }
   showScreen('home');
+}
+
+vibeMenuToggle.addEventListener('click', () => {
+  const isOpen = !vibeMenu.hidden;
+  vibeMenu.hidden = isOpen;
+  vibeMenuToggle.setAttribute('aria-expanded', String(!isOpen));
+});
+
+vibeReturnAction.addEventListener('click', performReturn);
+vibeShareAction.addEventListener('click', () => {
+  const vibeKey = state.activeVibe;
+  closeVibeMenu();
+  if (!vibeKey || !vibeShareSlugs[vibeKey]) return;
+  window.location.hash = `/share/${vibeShareSlugs[vibeKey]}`;
+});
+shareButton.addEventListener('click', shareCurrentVibe);
+window.addEventListener('hashchange', handleHashRoute);
+window.addEventListener('vibe-language-change', () => {
+  if (state.shareVibeKey) {
+    shareVibeName.textContent = translateText(vibeThemes[state.shareVibeKey].title);
+  } else if (screens.share.classList.contains('active')) {
+    shareVibeName.textContent = translateText('Неизвестный вайб');
+  }
+  shareFeedback.textContent = '';
+});
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.vibe-navigation') && !vibeMenu.hidden) {
+    closeVibeMenu();
+  }
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !vibeMenu.hidden) {
+    event.preventDefault();
+    closeVibeMenu(true);
+  }
 });
 
 function registerGameCleanup(cleanup) {
@@ -1650,7 +1847,7 @@ function renderAsmrGame() {
   asmrStage.replaceChildren(panel);
   const keyHandler = (event) => {
     if (!screens.vibe.classList.contains('active') || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    const key = event.key.toUpperCase();
+    const key = event.code.startsWith('Key') ? event.code.slice(3) : event.key.toUpperCase();
     if (!keys.includes(key)) return;
     const keyButton = [...keyboard.querySelectorAll('.keyboard-key')].find((item) => item.dataset.key === key);
     if (keyButton) walkToKey(key, keyButton);
@@ -1668,4 +1865,5 @@ function renderAsmrGame() {
 initParticles();
 renderQuestion();
 showScreen('home');
+handleHashRoute();
 startBackgroundPlaylist();

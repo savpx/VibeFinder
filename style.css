@@ -426,8 +426,7 @@ input {
 }
 
 .primary-btn,
-.option-btn,
-.return-btn {
+.option-btn {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
   color: var(--text);
@@ -447,7 +446,6 @@ input {
 
 .primary-btn:hover,
 .option-btn:hover,
-.return-btn:hover,
 .quote-card:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.2);
@@ -628,7 +626,7 @@ input {
 }
 
 #vibe-screen {
-  padding: 2rem 1rem 2rem;
+  padding: calc(max(18px, env(safe-area-inset-top)) + 46px + 1.3rem) 1rem 2rem;
   display: block;
   overflow-x: hidden;
   overflow-y: auto;
@@ -678,26 +676,22 @@ body.theme-forest #vibe-screen {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-body.theme-cosmos .quote-card,
-body.theme-cosmos .return-btn {
+body.theme-cosmos .quote-card {
   background: linear-gradient(180deg, rgba(15, 20, 35, 0.8), rgba(18, 14, 28, 0.72));
   border-color: rgba(144, 182, 255, 0.26);
 }
 
-body.theme-solar .quote-card,
-body.theme-solar .return-btn {
+body.theme-solar .quote-card {
   background: linear-gradient(180deg, rgba(66, 43, 17, 0.8), rgba(91, 52, 23, 0.62));
   border-color: rgba(251, 191, 36, 0.32);
 }
 
-body.theme-neon .quote-card,
-body.theme-neon .return-btn {
+body.theme-neon .quote-card {
   background: linear-gradient(180deg, rgba(14, 16, 25, 0.8), rgba(22, 15, 25, 0.72));
   border-color: rgba(103, 232, 249, 0.26);
 }
 
-body.theme-forest .quote-card,
-body.theme-forest .return-btn {
+body.theme-forest .quote-card {
   background: linear-gradient(180deg, rgba(17, 29, 18, 0.8), rgba(24, 34, 22, 0.72));
   border-color: rgba(156, 206, 148, 0.24);
 }
@@ -768,7 +762,7 @@ body.theme-forest .return-btn {
 #vibe-screen.active.vibe-screen-reveal .vibe-game-title,
 #vibe-screen.active.vibe-screen-reveal .game-stage,
 #vibe-screen.active.vibe-screen-reveal .asmr-stage,
-#vibe-screen.active.vibe-screen-reveal .vibe-navigation .return-btn {
+#vibe-screen.active.vibe-screen-reveal ~ .vibe-navigation .vibe-menu-toggle {
   animation-name: vibe-result-reveal;
   animation-duration: 850ms;
   animation-timing-function: cubic-bezier(0.2, 0.65, 0.25, 1);
@@ -805,7 +799,7 @@ body.theme-forest .return-btn {
   animation-delay: 4700ms;
 }
 
-#vibe-screen.active.vibe-screen-reveal .vibe-navigation .return-btn {
+#vibe-screen.active.vibe-screen-reveal ~ .vibe-navigation .vibe-menu-toggle {
   animation-delay: 5450ms;
 }
 
@@ -891,6 +885,8 @@ body.theme-forest .return-btn {
   min-width: 48px;
   min-height: 48px;
   padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
   border-radius: 15px;
   font-size: 1.15rem;
 }
@@ -1596,18 +1592,251 @@ body.theme-forest .return-btn {
 #vibe-screen[data-vibe="cozy"] .game-choice { border-radius: 20px; background: rgba(243,189,125,.14); }
 
 .vibe-navigation {
-  width: min(1200px, 96vw);
-  margin: 0 auto 1.3rem;
-  display: flex;
+  position: fixed;
+  z-index: 23;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(20px, env(safe-area-inset-right));
+  display: none;
   align-items: flex-start;
   justify-content: flex-end;
-  gap: 0.75rem;
 }
 
-.return-btn {
-  position: relative;
-  z-index: 6;
-  padding: 0.8rem 1.1rem;
+.page-shell[data-active-screen="vibe"] .vibe-navigation {
+  display: flex;
+}
+
+.vibe-menu-toggle {
+  display: grid;
+  width: 42px;
+  min-width: 42px;
+  height: 38px;
+  min-height: 38px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(220, 220, 220, 0.28);
+  border-radius: 999px;
+  color: #f4f4f4;
+  background: rgba(18, 18, 18, 0.88);
+  line-height: 0;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.vibe-menu-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+}
+
+.vibe-menu-toggle:hover,
+.vibe-menu-toggle:focus-visible,
+.vibe-menu-toggle[aria-expanded="true"] {
+  transform: translateY(-1px);
+  border-color: rgba(245, 245, 245, 0.58);
+  background: rgba(34, 34, 34, 0.96);
+}
+
+.vibe-menu {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 0.55rem);
+  inset-inline-end: 0;
+  display: grid;
+  width: min(220px, calc(100vw - 2rem));
+  gap: 0.2rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 16px;
+  background: rgba(10, 12, 18, 0.9);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px);
+  transform-origin: top right;
+  animation: vibe-menu-enter 180ms ease-out both;
+}
+
+[dir="rtl"] .vibe-menu {
+  transform-origin: top left;
+}
+
+.vibe-menu[hidden] {
+  display: none;
+}
+
+.vibe-menu button {
+  min-height: 44px;
+  padding: 0.65rem 0.8rem;
+  border: 0;
+  border-radius: 11px;
+  color: var(--text);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+}
+
+.vibe-menu button:hover,
+.vibe-menu button:focus-visible {
+  background: rgba(255, 255, 255, 0.09);
+  outline: none;
+}
+
+@keyframes vibe-menu-enter {
+  from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.share-screen {
+  overflow: auto;
+  padding: max(5rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  background: rgba(6, 10, 18, 0.18);
+  backdrop-filter: blur(8px);
+}
+
+body.theme-cosmos #share-screen {
+  background: linear-gradient(180deg, rgba(7, 11, 22, 0.35), rgba(18, 14, 30, 0.25));
+}
+
+body.theme-solar #share-screen {
+  background: linear-gradient(180deg, rgba(39, 24, 10, 0.28), rgba(58, 34, 12, 0.18));
+}
+
+body.theme-neon #share-screen {
+  background: linear-gradient(180deg, rgba(10, 11, 19, 0.36), rgba(22, 11, 25, 0.18));
+}
+
+body.theme-forest #share-screen {
+  background: linear-gradient(180deg, rgba(12, 18, 15, 0.28), rgba(18, 26, 18, 0.18));
+}
+
+.share-card {
+  width: min(720px, 100%);
+  margin: auto;
+  padding: clamp(2.5rem, 8vw, 5.5rem) clamp(1.25rem, 6vw, 4rem);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: clamp(24px, 5vw, 36px);
+  background: rgba(8, 10, 16, 0.24);
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(8px);
+}
+
+.share-kicker {
+  margin: 0 0 1.4rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.share-card h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 8vw, 5.7rem);
+  font-weight: 800;
+  letter-spacing: -0.065em;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.share-invitation {
+  display: inline-block;
+  max-width: 32rem;
+  margin: 1.6rem auto 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 2.8vw, 1.3rem);
+  line-height: 1.6;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.24em;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.share-invitation:hover,
+.share-invitation:focus-visible {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+
+.share-button {
+  display: block;
+  min-width: 170px;
+  min-height: 52px;
+  margin: clamp(2.2rem, 7vh, 3.5rem) auto 0;
+  padding: 0.9rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.09);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.share-button:hover,
+.share-button:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.share-button[hidden] {
+  display: none;
+}
+
+.share-feedback {
+  min-height: 1.5em;
+  margin: 0.8rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.share-screen.active .share-kicker,
+.share-screen.active #share-vibe-name,
+.share-screen.active .share-invitation,
+.share-screen.active .share-button {
+  animation: vibe-result-reveal 850ms cubic-bezier(0.2, 0.65, 0.25, 1) both;
+}
+
+.share-screen.active .share-kicker { animation-delay: 100ms; }
+.share-screen.active #share-vibe-name { animation-duration: 1150ms; animation-delay: 650ms; }
+.share-screen.active .share-invitation { animation-delay: 1450ms; }
+.share-screen.active .share-button { animation-delay: 2250ms; }
+
+#share-screen[data-vibe="night"] { --vibe-accent:#70e7ff; color:#e4f5ff; background:radial-gradient(ellipse at 50% 15%,#203858,#0b1021 62%,#080b15); }
+#share-screen[data-vibe="melancholic"] { --vibe-accent:#a8d8f0; color:#e4eef6; background:linear-gradient(160deg,#34495e,#1e2b3d 52%,#172130); }
+#share-screen[data-vibe="zen"] { --vibe-accent:#a7ead4; color:#e6f5ef; background:radial-gradient(ellipse at 50% 0,#325b5b,#183335 50%,#101e27); }
+#share-screen[data-vibe="chaotic"] { --vibe-accent:#ff5c74; color:#fff0f3; background:repeating-linear-gradient(130deg,#241225 0 36px,#30142e 36px 72px); }
+#share-screen[data-vibe="happy"] { --vibe-accent:#ffca48; color:#fff8e4; background:radial-gradient(circle at 15% 15%,#765331,#402b32 52%,#261d34); }
+#share-screen[data-vibe="mysterious"] { --vibe-accent:#c49aff; color:#f0e8ff; background:radial-gradient(ellipse at 80% 10%,#392954,#151322 55%,#0e101b); }
+#share-screen[data-vibe="creative"] { --vibe-accent:#ff80bc; color:#fff0fa; background:linear-gradient(135deg,#392044,#282047 50%,#173849); }
+#share-screen[data-vibe="nature"] { --vibe-accent:#a8d67b; color:#eff9e6; background:radial-gradient(ellipse at 30% 10%,#415b37,#1c3428 58%,#11231f); }
+#share-screen[data-vibe="retro"] { --vibe-accent:#bdf35d; color:#e6f5c8; background:repeating-linear-gradient(0deg,#171b31 0 4px,#1d2036 4px 8px); font-family:"Courier New",monospace; }
+#share-screen[data-vibe="cozy"] { --vibe-accent:#f3bd7d; color:#fff2df; background:radial-gradient(ellipse at 50% 5%,#75523e,#382c2a 58%,#201d23); }
+
+body.theme-retro #share-screen {
+  font-family: "Courier New", monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vibe-menu {
+    animation: none;
+  }
+
+  .share-screen.active .share-kicker,
+  .share-screen.active #share-vibe-name,
+  .share-screen.active .share-invitation,
+  .share-screen.active .share-button {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
 }
 
 @keyframes floaty {
@@ -1647,9 +1876,12 @@ body.theme-forest .return-btn {
   }
 
   .vibe-navigation {
-    width: 100%;
-    margin-bottom: 1rem;
-    gap: 0;
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+  }
+
+  #vibe-screen {
+    padding-top: calc(max(14px, env(safe-area-inset-top)) + 38px + 1rem);
   }
 
   .asmr-keyboard {
@@ -1726,10 +1958,31 @@ button:disabled {
   #vibe-screen.active.vibe-screen-reveal .vibe-game-title,
   #vibe-screen.active.vibe-screen-reveal .game-stage,
   #vibe-screen.active.vibe-screen-reveal .asmr-stage,
-  #vibe-screen.active.vibe-screen-reveal .vibe-navigation .return-btn {
-    animation: none;
-    opacity: 1;
-    transform: none;
+  #vibe-screen.active.vibe-screen-reveal ~ .vibe-navigation .vibe-menu-toggle {
+    animation-name: vibe-result-reveal-reduced;
+    animation-duration: 160ms;
+    animation-timing-function: ease-out;
+  }
+
+  #vibe-screen.active.vibe-screen-reveal .theme-tag { animation-delay: 0ms; }
+  #vibe-screen.active.vibe-screen-reveal #theme-name { animation-delay: 160ms; }
+  #vibe-screen.active.vibe-screen-reveal .vibe-description-wrap { animation-delay: 320ms; }
+  #vibe-screen.active.vibe-screen-reveal .vibe-divider { animation-delay: 480ms; }
+  #vibe-screen.active.vibe-screen-reveal .quote-card { animation-delay: 640ms; }
+  #vibe-screen.active.vibe-screen-reveal .vibe-game-title { animation-delay: 800ms; }
+  #vibe-screen.active.vibe-screen-reveal .game-stage,
+  #vibe-screen.active.vibe-screen-reveal .asmr-stage { animation-delay: 960ms; }
+  #vibe-screen.active.vibe-screen-reveal ~ .vibe-navigation .vibe-menu-toggle { animation-delay: 1120ms; }
+
+  @keyframes vibe-result-reveal-reduced {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .creation-orbit-ring,

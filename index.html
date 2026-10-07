@@ -105,12 +105,6 @@
       </section>
 
       <section id="vibe-screen" class="screen">
-        <div class="vibe-navigation">
-          <button id="return-btn" class="return-btn" aria-label="Вернуться в начало">
-            ↩ Вернуться
-          </button>
-        </div>
-
         <div class="vibe-shell">
           <header class="vibe-header">
             <div>
@@ -134,6 +128,37 @@
           <div id="asmr-stage" class="asmr-stage"></div>
         </div>
       </section>
+
+      <section id="share-screen" class="screen share-screen" aria-labelledby="share-vibe-name">
+        <main class="share-card">
+          <p class="share-kicker">МОЙ ВАЙБ СЕГОДНЯ</p>
+          <h1 id="share-vibe-name"></h1>
+          <a id="share-invitation" class="share-invitation" href="#home">
+            Узнай, какой вайб у тебя сегодня!
+          </a>
+          <button id="share-button" class="share-button" type="button">Поделиться</button>
+          <p id="share-feedback" class="share-feedback" role="status" aria-live="polite"></p>
+        </main>
+      </section>
+
+      <div class="vibe-navigation" role="group" aria-label="Меню результата">
+        <button
+          id="vibe-menu-toggle"
+          class="vibe-menu-toggle"
+          type="button"
+          aria-label="Открыть меню"
+          aria-expanded="false"
+          aria-controls="vibe-menu"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M3 5h14M3 10h14M3 15h14"></path>
+          </svg>
+        </button>
+        <div id="vibe-menu" class="vibe-menu" role="menu" hidden>
+          <button id="vibe-return-action" type="button" role="menuitem">Вернуться</button>
+          <button id="vibe-share-action" type="button" role="menuitem">Поделиться моим вайбом</button>
+        </div>
+      </div>
     </div>
 
     <div id="vibe-transition" class="vibe-transition" aria-hidden="true"></div>
